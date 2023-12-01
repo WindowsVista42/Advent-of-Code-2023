@@ -2,16 +2,6 @@ import Data.Char
 import Data.Maybe
 import Data.List
 
-part1 :: IO ()
-part1 = do
-    contents <- readFile "input.txt"
-    let lines' = lines contents
-    let firstDigits = map (\x -> fromJust $ find isDigit x) lines'
-    let lastDigits = map (\x -> fromJust $ find isDigit $ reverse x) lines'
-    let numbers = zipWith (\a b -> read [a, b] :: Int) firstDigits lastDigits
-    let sum' = sum numbers
-    print sum'
-
 numberMap :: [(String, Char)]
 numberMap =
     [ ("one",   '1')
@@ -47,8 +37,8 @@ getFirstNum xs tokens fn =
             | fromMaybe (maxBound :: Int) foundIdx < accI = (fromJust foundIdx, Just foundNumAsChar)
             | otherwise = (accI, accV)
 
-part2 :: IO ()
-part2 = do
+main :: IO ()
+main = do
     contents <- readFile "input.txt"
     let lines' = lines contents
     let firstDigits = map (\x -> getFirstNum x numberMap id) lines'
@@ -56,8 +46,3 @@ part2 = do
     let numbers = zipWith (\a b -> read [a,b] :: Int) firstDigits lastDigits
     let sum' = sum numbers
     print sum'
-
-main :: IO ()
-main = do
-    part1
-    part2

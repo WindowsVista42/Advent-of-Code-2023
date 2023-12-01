@@ -1,0 +1,10 @@
+Test**/
+Thing**/
+
+# Haskell compilation artifacts
+**/*.o
+**/*.hi
+**/*.exe
+
+# Haskell profiling artifacts
+**/*.prof

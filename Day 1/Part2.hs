@@ -33,9 +33,9 @@ getFirstNum xs tokens fn =
     in fromMaybe '0' v
     where
         getClosest :: (Maybe Int, Char) -> (Int, Maybe Char) -> (Int, Maybe Char)
-        getClosest (foundIdx, foundNumAsChar) (accI, accV)
-            | fromMaybe (maxBound :: Int) foundIdx < accI = (fromJust foundIdx, Just foundNumAsChar)
-            | otherwise = (accI, accV)
+        getClosest (foundIdx, foundAsChar) (accIdx, accAsChar)
+            | fromMaybe (maxBound :: Int) foundIdx < accIdx = (fromJust foundIdx, Just foundAsChar)
+            | otherwise = (accIdx, accAsChar)
 
 main :: IO ()
 main = do

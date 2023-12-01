@@ -1,10 +1,12 @@
+module Main where
+
 import Data.Char
 import Data.Maybe
 import Data.List
 
 main :: IO ()
 main = do
-    contents <- readFile "input.txt"
+    contents <- readFile "Day1/input.txt"
     let lines' = lines contents
     let firstDigits = map (\x -> fromJust $ find isDigit x) lines'
     let lastDigits = map (\x -> fromJust $ find isDigit $ reverse x) lines'

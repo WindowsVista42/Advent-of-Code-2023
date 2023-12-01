@@ -1,4 +1,5 @@
-import Data.Char
+module Main where
+
 import Data.Maybe
 import Data.List
 
@@ -29,7 +30,7 @@ findString token str = findIndex (isPrefixOf token) (tails str)
 
 getFirstNum :: String -> [(String, Char)] -> (String -> String) -> Char
 getFirstNum xs tokens fn =
-    let (i, v) = foldl (\acc (x, c) -> getClosest (findString (fn x) (fn xs), c) acc) (length xs, Nothing) tokens
+    let (_, v) = foldl (\acc (x, c) -> getClosest (findString (fn x) (fn xs), c) acc) (length xs, Nothing) tokens
     in fromMaybe '0' v
     where
         getClosest :: (Maybe Int, Char) -> (Int, Maybe Char) -> (Int, Maybe Char)
@@ -39,7 +40,7 @@ getFirstNum xs tokens fn =
 
 main :: IO ()
 main = do
-    contents <- readFile "input.txt"
+    contents <- readFile "Day1/input.txt"
     let lines' = lines contents
     let firstDigits = map (\x -> getFirstNum x numberMap id) lines'
     let lastDigits = map (\x -> getFirstNum x numberMap reverse) lines'

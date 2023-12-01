@@ -5,6 +5,7 @@ Thing**/
 **/*.o
 **/*.hi
 **/*.exe
+dist-newstyle/
 
 # Haskell profiling artifacts
 **/*.prof

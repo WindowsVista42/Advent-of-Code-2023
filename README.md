@@ -3,33 +3,37 @@
 ## Building and Running
 ### Option A: Cabal Project
 ```
-cabal run Day1-Part1
+cabal run Day1
 ```
 ### Option B: GHC
 **Compile**
 ```
-ghc Day1/Part1.hs
+ghc Day1/Main.hs
 ```
 
 **Run**
 
 Linux
 ```
-./Day1/Part1
+./Day1/Main
 ```
 
 Windows
 ```
-.\Day1\Part1.exe
+.\Day1\Main.exe
 ```
 ## Option C: GHCI
 **Load into GHCI**
 ```
-ghci Day1/Part1.hs
+ghci Day1/Main.hs
 ```
 **Run in GHCI shell**
 ```
 main
+```
+**Or**
+```
+part1
 ```
 **Reload after changes**
 ```

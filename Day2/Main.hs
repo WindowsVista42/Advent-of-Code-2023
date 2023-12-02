@@ -23,14 +23,12 @@ isValid (x:y:xs) =
     in
         if y == "red" then
             n <= 12 && isValid xs
+        else if y == "green" then
+            n <= 13 && isValid xs
+        else if y == "blue" then
+            n <= 14 && isValid xs
         else
-            if y == "green" then
-                n <= 13 && isValid xs
-            else
-                if y == "blue" then
-                    n <= 14 && isValid xs
-                else
-                    isValid xs
+            isValid xs
 
 isPossible :: String -> Maybe Int
 isPossible line =
@@ -60,14 +58,12 @@ doTheThing (r, g, b) (x:y:xs) =
     in
         if y == "red" then
             doTheThing (max r n , g, b) xs
+        else if y == "green" then
+            doTheThing (r, max g n, b) xs
+        else if y == "blue" then
+            doTheThing (r, g, max b n) xs
         else
-            if y == "green" then
-                doTheThing (r, max g n, b) xs
-            else
-                if y == "blue" then
-                    doTheThing (r, g, max b n) xs
-                else
-                    doTheThing (r, g, b) xs
+            doTheThing (r, g, b) xs
 
 calcPower :: String -> Int
 calcPower line = 

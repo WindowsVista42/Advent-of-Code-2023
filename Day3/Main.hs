@@ -6,7 +6,6 @@ import Data.List
 
 import qualified Data.Vector as V
 import qualified Text.Read as TR
-import qualified Data.Map as M
 
 type ComponentList = ([Int], [(Int, Int)])
 
@@ -28,11 +27,11 @@ anySymbolsInXY minpos maxpos fn va =
                 let vy = fromMaybe (V.fromList []) (va V.!? iy)
                 in fromMaybe '.' (vy V.!? ix)
 
-getSymbolPosInXY :: (Int, Int) -> (Int, Int) -> V.Vector (V.Vector Char) -> (Int, Int)
-getSymbolPosInXY minpos maxpos va =
+getSymbolPosInXY :: (Int, Int) -> (Int, Int) -> (Char -> Bool) -> V.Vector (V.Vector Char) -> (Int, Int)
+getSymbolPosInXY minpos maxpos fn va =
     let (xs,ys) = getSquareCoords minpos maxpos 
     in
-        foldl (\acc iy -> foldl (\acc2 ix -> if part2Symbol $ tryGet iy ix then (ix,iy) else acc2) acc xs) (0,0) ys where
+        foldl (\acc iy -> foldl (\acc2 ix -> if fn $ tryGet iy ix then (ix,iy) else acc2) acc xs) (0,0) ys where
             tryGet iy ix =
                 let vy = fromMaybe (V.fromList []) (va V.!? iy)
                 in fromMaybe '.' (vy V.!? ix)
@@ -40,8 +39,8 @@ getSymbolPosInXY minpos maxpos va =
 anySymbolsForNumber :: (Int,Int) -> Int -> (Char -> Bool) -> V.Vector (V.Vector Char) -> Bool
 anySymbolsForNumber (minx,maxx) y fn va = anySymbolsInXY (minx-1,y-1) (maxx+1,y+1) fn va
 
-getSymbolPosForNumber :: (Int, Int) -> Int -> V.Vector (V.Vector Char) -> (Int, Int)
-getSymbolPosForNumber (minx,maxx) y va = getSymbolPosInXY (minx-1,y-1) (maxx+1,y+1) va
+getSymbolPosForNumber :: (Int, Int) -> Int -> (Char -> Bool) -> V.Vector (V.Vector Char) -> (Int, Int)
+getSymbolPosForNumber (minx,maxx) y fn va = getSymbolPosInXY (minx-1,y-1) (maxx+1,y+1) fn va
 
 getComponentListForRow :: V.Vector Char -> ComponentList
 getComponentListForRow v =
@@ -87,7 +86,7 @@ part2 va =
             in
                 let matches = foldl (\acc (n,s) -> if anySymbolsForNumber s i part2Symbol va then (n,s,i) : acc else acc) [] $ zip nums ranges
                 in
-                    foldl (\acc (num,pos,y) -> (num,pos,y,getSymbolPosForNumber pos y va) : acc) [] matches
+                    foldl (\acc (num,pos,y) -> (num,pos,y,getSymbolPosForNumber pos y part2Symbol va) : acc) [] matches
     in
         let sorted = sortBy fn a where
             fn (_, _, _, lsympos) (_, _, _, rsympos) = getPart2Ordering lsympos rsympos

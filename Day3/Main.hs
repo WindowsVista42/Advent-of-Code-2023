@@ -78,7 +78,7 @@ getPart2Ordering (lx, ly) (rx, ry)
     | ly == ry && lx == rx = EQ
     | otherwise = EQ
 
-part2 :: V.Vector (V.Vector Char) -> Int -- [V.Vector (Int, (Int, Int), Int, (Int, Int))]
+part2 :: V.Vector (V.Vector Char) -> Int
 part2 va =
     let a = V.foldl (\acc (v0,i) -> acc ++ f v0 i) [] $ V.zip va (V.fromList [0..]) where
         f v0 i =
@@ -96,7 +96,9 @@ part2 va =
                 filtered2 = filter (\x -> length x > 1) grouped
                 listified = map (\x -> V.toList x) filtered2
             in
-                foldl (\acc [(ln,_,_,_),(rn,_,_,_)] -> acc + ln * rn) 0 listified
+                foldl (\acc x -> acc + fn2 x) 0 listified where
+                    fn2 [(ln,_,_,_),(rn,_,_,_)] = ln * rn
+                    fn2 _ = 0
 
 main :: IO ()
 main = do

@@ -65,7 +65,7 @@ getAllComponents grid fn =
             let (nums, ranges) = toComponentList row
                 matches       = foldl (\acc (num, posRange) -> [(num, posRange, y) | hasSymbolForNumber posRange y fn grid] ++ acc) [] $ zip nums ranges
                 componentInfo = foldl (\acc (num, pos, _) -> (num,pos,y,getSymbolPosForNumber pos y fn grid) : acc) [] matches
-            in 
+            in
                 foldAcc ++ componentInfo
 
 part1 :: Grid -> Int

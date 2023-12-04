@@ -8,6 +8,10 @@ import qualified Data.Vector as V
 import qualified Text.Read as TR
 
 type ComponentList = ([Int], [(Int, Int)])
+type Pos = (Int, Int)
+type IntRange = (Int, Int)
+type Row = V.Vector Char
+type Grid = V.Vector (V.Vector Char)
 
 part1Symbol :: Char -> Bool
 part1Symbol x = x=='/' || x=='*' || x=='$' || x=='@' || x=='-' || x=='%' || x=='!' || x=='#' || x=='+' || x=='=' || x=='&' || x=='^'
@@ -15,44 +19,42 @@ part1Symbol x = x=='/' || x=='*' || x=='$' || x=='@' || x=='-' || x=='%' || x=='
 part2Symbol :: Char -> Bool
 part2Symbol x = x == '*'
 
-getSquareCoords :: (Int, Int) -> (Int, Int) -> ([Int],[Int])
-getSquareCoords (minx,miny) (maxx,maxy) = ([minx..maxx], [miny..maxy])
-
-anySymbolsInXY :: (Int, Int) -> (Int, Int) -> (Char -> Bool) -> V.Vector (V.Vector Char) -> Bool
-anySymbolsInXY minpos maxpos fn va =
-    let (xs,ys) = getSquareCoords minpos maxpos
+foldGrid :: Pos -> Pos -> (b -> Pos -> Char -> b) -> b -> Grid -> b
+foldGrid (minX,minY) (maxX,maxY) foldFn initialValue grid =
+    let (xs,ys) = ([minX..maxX], [minY..maxY])
     in
-        foldl (\acc iy -> acc || foldl (\acc2 ix -> acc2 || fn (tryGet iy ix)) acc xs) False ys where
+        foldl (\acc iy -> foldl (\acc2 ix -> foldFn acc2 (ix,iy) (tryGet iy ix) ) acc xs) initialValue ys where
             tryGet iy ix =
-                let vy = fromMaybe (V.fromList []) (va V.!? iy)
+                let vy = fromMaybe (V.fromList []) (grid V.!? iy)
                 in fromMaybe '.' (vy V.!? ix)
 
-getSymbolPosInXY :: (Int, Int) -> (Int, Int) -> (Char -> Bool) -> V.Vector (V.Vector Char) -> (Int, Int)
-getSymbolPosInXY minpos maxpos fn va =
-    let (xs,ys) = getSquareCoords minpos maxpos 
-    in
-        foldl (\acc iy -> foldl (\acc2 ix -> if fn $ tryGet iy ix then (ix,iy) else acc2) acc xs) (0,0) ys where
-            tryGet iy ix =
-                let vy = fromMaybe (V.fromList []) (va V.!? iy)
-                in fromMaybe '.' (vy V.!? ix)
+hasSymbolInXY :: Pos -> Pos -> (Char -> Bool) -> Grid -> Bool
+hasSymbolInXY minPos maxPos fn =
+    foldGrid minPos maxPos (\acc _ x -> acc || fn x) False
 
-anySymbolsForNumber :: (Int,Int) -> Int -> (Char -> Bool) -> V.Vector (V.Vector Char) -> Bool
-anySymbolsForNumber (minx,maxx) y fn va = anySymbolsInXY (minx-1,y-1) (maxx+1,y+1) fn va
+getSymbolPosInXY :: Pos -> Pos -> (Char -> Bool) -> Grid -> Pos
+getSymbolPosInXY minPos maxPos fn =
+    foldGrid minPos maxPos (\acc (ix,iy) x -> if fn x then (ix,iy) else acc) (0,0)
 
-getSymbolPosForNumber :: (Int, Int) -> Int -> (Char -> Bool) -> V.Vector (V.Vector Char) -> (Int, Int)
-getSymbolPosForNumber (minx,maxx) y fn va = getSymbolPosInXY (minx-1,y-1) (maxx+1,y+1) fn va
+hasSymbolForNumber :: IntRange -> Int -> (Char -> Bool) -> Grid -> Bool
+hasSymbolForNumber (minx,maxx) y =
+    hasSymbolInXY (minx-1,y-1) (maxx+1,y+1)
 
-getComponentListForRow :: V.Vector Char -> ComponentList
-getComponentListForRow v =
-    let z = V.groupBy (\(a,_) (b,_) -> isNumber a && isNumber b) $ V.zip v (V.fromList [0..])
+getSymbolPosForNumber :: IntRange -> Int -> (Char -> Bool) -> Grid -> Pos
+getSymbolPosForNumber (minx,maxx) y =
+    getSymbolPosInXY (minx-1,y-1) (maxx+1,y+1)
+
+toComponentList :: Row -> ComponentList
+toComponentList row =
+    let z = V.groupBy (\(a,_) (b,_) -> isNumber a && isNumber b) $ V.zip row (V.fromList [0..])
         z' = map V.toList z
-        z'' = filter f $ z' where
+        z'' = filter f z' where
             f ((c,_):_) = c/='.'
             f [] = False
     in
-        let b = map (\x -> foldr (\(c,_) acc -> c : acc) [] x) z''
+        let b = map (foldr (\(c,_) acc -> c : acc) []) z''
             b2 = map (\x -> fromMaybe 0 (TR.readMaybe x :: Maybe Int)) b
-            se = map (\x -> f2 x) z'' where
+            se = map f2 z'' where
                 f2 x = 
                     let (_,si) = head x
                         (_,ei) = last x
@@ -61,44 +63,49 @@ getComponentListForRow v =
         in
             (b2, se)
 
-part1 :: V.Vector (V.Vector Char) -> Int
-part1 va =
-    V.foldr (\(v0,i) acc -> acc + f v0 i) 0 $ V.zip va (V.fromList [0..]) where
-        f v0 i =
-            let (nums, ranges) = getComponentListForRow v0
+part1 :: Grid -> Int
+part1 grid =
+    V.foldl (\acc (row, y) -> acc + mapFn row y) 0 $ V.zip grid (V.fromList [0..]) where
+        mapFn row y =
+            let (nums, ranges) = toComponentList row
             in
-                foldr (\(n,s) acc -> if anySymbolsForNumber s i part1Symbol va then acc + n else acc) 0 $ zip nums ranges
+                foldr (\(num, s) acc -> if hasSymbolForNumber s y part1Symbol grid then acc + num else acc) 0 $ zip nums ranges
 
-getPart2Ordering :: (Int, Int) -> (Int,Int) -> Ordering
-getPart2Ordering (lx, ly) (rx, ry)
-    | ly < ry = LT
-    | ly > ry = GT
-    | ly == ry && lx < rx = LT
-    | ly == ry && lx > rx = GT
-    | ly == ry && lx == rx = EQ
-    | otherwise = EQ
+part2 :: Grid -> Int
+part2 grid =
+    -- The general algorithm for part 2 is the following steps:
+    -- 1. Generate a list of components with a '*' symbol next to them
+    -- 2. Find the position of the symbol for the components
+    -- 3. Sort all components by the position of the symbol
+    -- 4. Group components together that have the same symbol position
+    -- 5. Remove groups with one or fewer elements
+    -- 6. Multiply numbers in groups together
 
-part2 :: V.Vector (V.Vector Char) -> Int
-part2 va =
-    let a = V.foldl (\acc (v0,i) -> acc ++ f v0 i) [] $ V.zip va (V.fromList [0..]) where
-        f v0 i =
-            let (nums, ranges) = getComponentListForRow v0
+    let allComponents = foldl (\acc (row, y) -> acc ++ mapFn row y) [] $ V.zip grid (V.fromList [0..])
+        mapFn row y =
+            let (nums, ranges) = toComponentList row
+                matches = foldl (\acc (num, posRange) -> if hasSymbolForNumber posRange y part2Symbol grid then (num, posRange, y) : acc else acc) [] $ zip nums ranges
             in
-                let matches = foldl (\acc (n,s) -> if anySymbolsForNumber s i part2Symbol va then (n,s,i) : acc else acc) [] $ zip nums ranges
-                in
-                    foldl (\acc (num,pos,y) -> (num,pos,y,getSymbolPosForNumber pos y part2Symbol va) : acc) [] matches
+                foldl (\acc (num, pos, _) -> (num,pos,y,getSymbolPosForNumber pos y part2Symbol grid) : acc) [] matches
+
+        sorted = sortBy fn allComponents where
+            fn (_,_,_,lsympos) (_,_,_,rsympos) = compareFn lsympos rsympos where
+                compareFn :: Pos -> Pos -> Ordering
+                compareFn (lx, ly) (rx, ry)
+                    | ly < ry = LT
+                    | ly > ry = GT
+                    | ly == ry && lx < rx = LT
+                    | ly == ry && lx > rx = GT
+                    | ly == ry && lx == rx = EQ
+                    | otherwise = EQ
+
+        filtered = filter (\(n,_,_,_) -> n /= 0) sorted
+        grouped  = groupBy (\(_,_,_,lsympos) (_,_,_,rsympos) -> lsympos == rsympos) filtered
+        valid    = filter (\x -> length x > 1) grouped
     in
-        let sorted = sortBy fn a where
-            fn (_, _, _, lsympos) (_, _, _, rsympos) = getPart2Ordering lsympos rsympos
-        in
-            let filtered  = filter (\(n,_,_,sympos) -> if n == 0 || sympos == (0,0) then False else True) sorted
-                grouped   = V.groupBy (\(_,_,_,lsympos) (_,_,_,rsympos) -> lsympos == rsympos) $ V.fromList filtered
-                filtered2 = filter (\x -> length x > 1) grouped
-                listified = map (\x -> V.toList x) filtered2
-            in
-                foldl (\acc x -> acc + fn2 x) 0 listified where
-                    fn2 [(ln,_,_,_),(rn,_,_,_)] = ln * rn
-                    fn2 _ = 0
+        foldl (\acc x -> acc + fn2 x) 0 valid where
+            fn2 [(ln,_,_,_),(rn,_,_,_)] = ln * rn
+            fn2 _ = 0
 
 main :: IO ()
 main = do

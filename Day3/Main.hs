@@ -37,12 +37,12 @@ getSymbolPosInXY minPos maxPos fn =
     foldGrid minPos maxPos (\acc (ix,iy) x -> if fn x then (ix,iy) else acc) (0,0)
 
 hasSymbolForNumber :: IntRange -> Int -> (Char -> Bool) -> Grid -> Bool
-hasSymbolForNumber (minx,maxx) y =
-    hasSymbolInXY (minx-1,y-1) (maxx+1,y+1)
+hasSymbolForNumber (minX,maxX) y =
+    hasSymbolInXY (minX-1,y-1) (maxX+1,y+1)
 
 getSymbolPosForNumber :: IntRange -> Int -> (Char -> Bool) -> Grid -> Pos
-getSymbolPosForNumber (minx,maxx) y =
-    getSymbolPosInXY (minx-1,y-1) (maxx+1,y+1)
+getSymbolPosForNumber (minX,maxX) y =
+    getSymbolPosInXY (minX-1,y-1) (maxX+1,y+1)
 
 toComponentList :: Row -> ComponentList
 toComponentList row =

@@ -8,6 +8,7 @@ import qualified Data.Vector as V
 import qualified Text.Read as TR
 
 type ComponentList = ([Int], [(Int, Int)])
+type ComponentInfo = (Int, Pos, Int, Pos)
 type Pos = (Int, Int)
 type IntRange = (Int, Int)
 type Row = V.Vector Char
@@ -46,30 +47,32 @@ getSymbolPosForNumber (minX,maxX) y =
 
 toComponentList :: Row -> ComponentList
 toComponentList row =
-    let z = V.groupBy (\(a,_) (b,_) -> isNumber a && isNumber b) $ V.zip row (V.fromList [0..])
-        z' = map V.toList z
-        z'' = filter f z' where
-            f ((c,_):_) = c/='.'
-            f [] = False
+    let charAndPos = fmap V.toList $ V.groupBy (\(a,_) (b,_) -> isNumber a && isNumber b) $ V.zip row (V.fromList [0..])
+        onlyNumsAndPos = filter filterFn charAndPos where
+            filterFn ((c,_):_) = c/='.'
+            filterFn [] = False
     in
-        let b = map (foldr (\(c,_) acc -> c : acc) []) z''
-            b2 = map (\x -> fromMaybe 0 (TR.readMaybe x :: Maybe Int)) b
-            se = map f2 z'' where
-                f2 x = 
-                    let (_,si) = head x
-                        (_,ei) = last x
-                    in
-                        (si,ei)
-        in
-            (b2, se)
+        let numStrs = map (foldr (\(c,_) acc -> c : acc) []) onlyNumsAndPos
+            nums    = map (\x -> fromMaybe 0 (TR.readMaybe x :: Maybe Int)) numStrs
+            ranges  = map (\x -> (snd $ head x, snd $ last x)) onlyNumsAndPos
+    in
+        (nums, ranges)
+
+getAllComponents :: Grid -> (Char -> Bool) -> [ComponentInfo]
+getAllComponents grid fn =
+    foldl foldFn [] $ V.zip grid (V.fromList [0..]) where
+        foldFn foldAcc (row, y) =
+            let (nums, ranges) = toComponentList row
+                matches       = foldl (\acc (num, posRange) -> [(num, posRange, y) | hasSymbolForNumber posRange y fn grid] ++ acc) [] $ zip nums ranges
+                componentInfo = foldl (\acc (num, pos, _) -> (num,pos,y,getSymbolPosForNumber pos y fn grid) : acc) [] matches
+            in 
+                foldAcc ++ componentInfo
 
 part1 :: Grid -> Int
 part1 grid =
-    V.foldl (\acc (row, y) -> acc + mapFn row y) 0 $ V.zip grid (V.fromList [0..]) where
-        mapFn row y =
-            let (nums, ranges) = toComponentList row
-            in
-                foldr (\(num, s) acc -> if hasSymbolForNumber s y part1Symbol grid then acc + num else acc) 0 $ zip nums ranges
+    let allComponents = getAllComponents grid part1Symbol
+    in
+        foldl (\acc (num,_,_,_) -> acc + num) 0 allComponents
 
 part2 :: Grid -> Int
 part2 grid =
@@ -81,13 +84,7 @@ part2 grid =
     -- 5. Remove groups with one or fewer elements
     -- 6. Multiply numbers in groups together
 
-    let allComponents = foldl (\acc (row, y) -> acc ++ mapFn row y) [] $ V.zip grid (V.fromList [0..])
-        mapFn row y =
-            let (nums, ranges) = toComponentList row
-                matches = foldl (\acc (num, posRange) -> if hasSymbolForNumber posRange y part2Symbol grid then (num, posRange, y) : acc else acc) [] $ zip nums ranges
-            in
-                foldl (\acc (num, pos, _) -> (num,pos,y,getSymbolPosForNumber pos y part2Symbol grid) : acc) [] matches
-
+    let allComponents = getAllComponents grid part2Symbol
         sorted = sortBy fn allComponents where
             fn (_,_,_,lsympos) (_,_,_,rsympos) = compareFn lsympos rsympos where
                 compareFn :: Pos -> Pos -> Ordering
@@ -98,20 +95,18 @@ part2 grid =
                     | ly == ry && lx > rx = GT
                     | ly == ry && lx == rx = EQ
                     | otherwise = EQ
-
         filtered = filter (\(n,_,_,_) -> n /= 0) sorted
         grouped  = groupBy (\(_,_,_,lsympos) (_,_,_,rsympos) -> lsympos == rsympos) filtered
         valid    = filter (\x -> length x > 1) grouped
     in
-        foldl (\acc x -> acc + fn2 x) 0 valid where
-            fn2 [(ln,_,_,_),(rn,_,_,_)] = ln * rn
-            fn2 _ = 0
+        foldl (\acc x -> acc + foldFn x) 0 valid where
+            foldFn [(ln,_,_,_),(rn,_,_,_)] = ln * rn
+            foldFn _ = 0
 
 main :: IO ()
 main = do
     contents <- readFile "Day3/input.txt"
     let lines' = lines contents
-    let a = V.fromList lines'
-    let b = V.map V.fromList a
-    print $ part1 b
-    print $ part2 b
+    let grid = V.fromList <$> V.fromList lines'
+    print $ part1 grid
+    print $ part2 grid

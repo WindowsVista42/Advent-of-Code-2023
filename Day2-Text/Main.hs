@@ -59,7 +59,7 @@ getTotalPower :: (Int, Int, Int) -> [T.Text] -> (Int, Int, Int)
 getTotalPower acc [] = acc
 getTotalPower acc [_] = acc
 getTotalPower (r,g,b) (x:y:xs) =
-    let (n,_) = fromRight (0,T.empty) $ TR.decimal x
+    let (n,_) = fromRight (0, T.empty) $ TR.decimal x
     in
         getTotalPower (getHighestPower n y (r,g,b)) xs
 

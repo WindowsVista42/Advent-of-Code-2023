@@ -18,7 +18,7 @@ split c xs = case break (==c) xs of
 
 getNumOfMatches :: ([Int],[Int]) -> Int
 getNumOfMatches (a,b) =
-    length $ mapMaybe (\x -> find (== x) b) a
+    length $ mapMaybe (\x -> find (==x) b) a
 
 part1 :: [Int] -> Int
 part1 = foldl (\acc x -> acc + if x == 0 then 0 else 2 ^ (x - 1)) 0
@@ -45,9 +45,9 @@ part2 matchCount =
 
 calcMatchCounts :: [String] -> [Int]
 calcMatchCounts lines' =
-    let lines'' = map (drop 10) lines'
+    let lines'' = fmap (drop 10) lines'
 
-        splitted = map (split '|') lines''
+        splitted = fmap (split '|') lines''
         eachNum = fmap fn splitted where
             fn [x,y] = (split ' ' x,split ' ' y)
             fn _ = undefined

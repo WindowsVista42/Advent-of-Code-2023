@@ -1,10 +1,10 @@
 module Main where
 
-import Data.Either
+import Data.Maybe
 
 import qualified Data.Vector as V
 import qualified Data.Text as T
-import qualified Data.Text.Read as T.Read
+import qualified Util
 
 data InfoMapping = InfoMapping {
     dstMapping :: Int,
@@ -25,54 +25,46 @@ data SeedMaps = SeedMaps {
     humidityToLocation    :: V.Vector InfoMapping
 } deriving Show
 
-parseInt :: T.Text -> Int
-parseInt x = 
-    fst $ fromRight (0, T.empty) $ T.Read.decimal x
+-- parseInt :: T.Text -> Int
+-- parseInt x = 
+--     fst $ fromRight (0, T.empty) $ T.Read.decimal x
+
+isInInfoMapping :: Int -> InfoMapping -> Bool
+isInInfoMapping v (InfoMapping _ srcMap range') =
+    v >= srcMap && v < (srcMap + range')
 
 findInfoMapping :: V.Vector InfoMapping -> Int -> Int
 findInfoMapping m srcVal =
-    foldl foldFn srcVal m where
-        foldFn acc srcFoldVal =
-            let InfoMapping dstMap srcMap range' = srcFoldVal
-            in
-                if srcVal >= srcMap && srcVal < (srcMap + range') then
+    let infoMapping = V.find (isInInfoMapping srcVal) m
+        value =
+            if isJust infoMapping then
+                let InfoMapping dstMap srcMap _ = fromJust infoMapping
+                in
                     dstMap + (srcVal - srcMap)
-                else
-                    acc
+            else
+                srcVal
+    in
+        value
 
 parseSeeds :: [T.Text] -> (V.Vector SeedId, [T.Text])
 parseSeeds (x:xs) =
-    let line    = T.drop 7 x
-        numStrs = T.splitOn (T.pack " ") line
-        nums    = V.fromList $ fmap parseInt numStrs
+    let line = T.drop 7 x
+        nums = V.fromList $ Util.parseIntOrZero <$> Util.splitOnSpace line
     in
         (nums, dropWhile (==T.pack "\n") xs)
 
 parseSeeds _ = undefined
 
 infoMappingFromText :: [T.Text] -> InfoMapping
-infoMappingFromText [dstMapping',srcMapping',range'] = InfoMapping (parseInt dstMapping') (parseInt srcMapping') (parseInt range')
+infoMappingFromText [dstMapping',srcMapping',range'] = InfoMapping (Util.parseIntOrZero dstMapping') (Util.parseIntOrZero srcMapping') (Util.parseIntOrZero range')
 infoMappingFromText _ = undefined
-
-skipLine :: [T.Text] -> [T.Text]
-skipLine [] = []
-skipLine (_:xs) = xs
-
-skipEmptyLines :: [T.Text] -> [T.Text]
-skipEmptyLines = dropWhile (==T.empty)
-
-spanNonEmptyLines :: [T.Text] -> ([T.Text], [T.Text])
-spanNonEmptyLines = span (/=T.empty)
 
 parseInfoMapping :: [T.Text] -> (V.Vector InfoMapping, [T.Text])
 parseInfoMapping xs =
-    let (lhs,rhs) = spanNonEmptyLines $ skipLine $ skipEmptyLines xs
+    let (lhs,rhs)    = Util.spanNonEmptyLines $ Util.skipLine $ Util.skipEmptyLines xs
+        infoMappings = infoMappingFromText . Util.splitOnSpace <$> lhs
     in
-        let lhs' = fmap (T.splitOn (T.pack " ")) lhs
-        in
-            let infoMappings = fmap infoMappingFromText lhs'
-            in
-                (V.fromList infoMappings, rhs)
+        (V.fromList infoMappings, rhs)
 
 getPairs :: [Int] -> [(Int,Int)]
 getPairs [] = []

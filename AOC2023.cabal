@@ -55,5 +55,18 @@ executable Day5
                       text ^>=2.1,
                       vector ^>=0.13.1.0,
                       containers ^>=0.7
-    hs-source-dirs:   Day5
+    hs-source-dirs:   Day5,
+                      Util
+    other-modules:    Util
+    default-language: Haskell2010
+
+executable Day6
+    import:           warnings
+    main-is:          Main.hs
+    build-depends:    base ^>=4.17.2.0,
+                      text ^>=2.1,
+                      vector ^>=0.13.1.0,
+    hs-source-dirs:   Day6,
+                      Util
+    other-modules:    Util
     default-language: Haskell2010

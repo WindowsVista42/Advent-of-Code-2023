@@ -3,7 +3,6 @@ module Util where
 import Data.Maybe
 import Data.Either
 
-import qualified Data.Vector as V
 import qualified Data.Text as T
 import qualified Data.Text.Read as T.Read
 
@@ -18,7 +17,10 @@ spanNonEmptyLines :: [T.Text] -> ([T.Text], [T.Text])
 spanNonEmptyLines = span (/=T.empty)
 
 splitOnSpace :: T.Text -> [T.Text]
-splitOnSpace = T.splitOn $ T.pack " "
+splitOnSpace = T.splitOn (T.pack " ")
+
+splitOnWhitespace :: T.Text -> [T.Text]
+splitOnWhitespace text = filter (/=T.empty) $ T.splitOn (T.pack " ") text
 
 parseInt :: T.Text -> Maybe Int
 parseInt x =
@@ -35,7 +37,7 @@ parseInts xs =
 
 parseIntsOrZeros :: T.Text -> [Int]
 parseIntsOrZeros xs =
-    parseIntOrZero <$> splitOnSpace xs
+    parseIntOrZero <$> splitOnWhitespace xs
 
 parseIntOrZero :: T.Text -> Int
 parseIntOrZero x = fromMaybe 0 $ parseInt x

@@ -20,11 +20,11 @@ main :: IO ()
 main = do
     lines' <- Util.readFile "Day6/input.txt"
 
-    let times = V.fromList $ filter (/=0) $ Util.parseIntsOrZeros $ T.drop 5 $ head lines'
-    let distances = V.fromList $ filter (/=0) $ Util.parseIntsOrZeros $ T.drop 9 $ last lines'
+    let times     = V.fromList $ Util.parseIntsOrZeros $ T.drop 5 $ head lines'
+    let distances = V.fromList $ Util.parseIntsOrZeros $ T.drop 9 $ last lines'
 
-    let times' = V.fromList $ filter (/=0) $ Util.parseIntsOrZeros $ T.filter isNumber $ head lines'
-    let distances' = V.fromList $ filter (/=0) $ Util.parseIntsOrZeros $ T.filter isNumber $ last lines'
+    let times'     = V.fromList $ Util.parseIntsOrZeros $ T.filter isNumber $ head lines'
+    let distances' = V.fromList $ Util.parseIntsOrZeros $ T.filter isNumber $ last lines'
 
     print $ solve times distances
     print $ solve times' distances'

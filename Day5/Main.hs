@@ -25,10 +25,6 @@ data SeedMaps = SeedMaps {
     humidityToLocation    :: V.Vector InfoMapping
 } deriving Show
 
--- parseInt :: T.Text -> Int
--- parseInt x = 
---     fst $ fromRight (0, T.empty) $ T.Read.decimal x
-
 isInInfoMapping :: Int -> InfoMapping -> Bool
 isInInfoMapping v (InfoMapping _ srcMap range') =
     v >= srcMap && v < (srcMap + range')

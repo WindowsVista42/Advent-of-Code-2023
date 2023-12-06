@@ -25,12 +25,16 @@ parseInt x =
     let v = T.Read.decimal x
     in
         if isRight v then
-            Just $ fst $ fromRight (0, T.empty) v
+            Just $ fst $ fromRight (undefined, T.empty) v
         else
             Nothing
 
-parseInts :: T.Text -> [Int]
+parseInts :: T.Text -> [Maybe Int]
 parseInts xs =
+    parseInt <$> splitOnSpace xs
+
+parseIntsOrZeros :: T.Text -> [Int]
+parseIntsOrZeros xs =
     parseIntOrZero <$> splitOnSpace xs
 
 parseIntOrZero :: T.Text -> Int

@@ -65,7 +65,7 @@ executable Day6
     main-is:          Main.hs
     build-depends:    base ^>=4.17.2.0,
                       text ^>=2.1,
-                      vector ^>=0.13.1.0,
+                      vector ^>=0.13.1.0
     hs-source-dirs:   Day6,
                       Util
     other-modules:    Util
